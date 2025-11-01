@@ -1,11 +1,12 @@
-import { neon } from '@neondatabase/serverless';
+import { getDbClient, initializeDatabase } from '../../../../utils/db';
 
 // Update dish
 export async function PUT(request, { params }) {
-  const { id } = params;
-  const { name, price, desc, tags } = await request.json();
-  const sql = neon(process.env.DATABASE_URL);
   try {
+    await initializeDatabase(); // Ensure tables exist
+    const { id } = params;
+    const { name, price, desc, tags } = await request.json();
+    const sql = getDbClient();
     const [dish] = await sql`
       UPDATE dishes 
       SET name = ${name}, price = ${price}, description = ${desc}, tags = ${tags} 
@@ -17,6 +18,7 @@ export async function PUT(request, { params }) {
       headers: { 'Content-Type': 'application/json' }
     });
   } catch (error) {
+    console.error('PUT /api/dishes/[id] error:', error);
     return new Response(JSON.stringify({ error: error.message }), {
       status: 500,
       headers: { 'Content-Type': 'application/json' }
@@ -26,15 +28,17 @@ export async function PUT(request, { params }) {
 
 // Delete dish
 export async function DELETE(request, { params }) {
-  const { id } = params;
-  const sql = neon(process.env.DATABASE_URL);
   try {
+    await initializeDatabase(); // Ensure tables exist
+    const { id } = params;
+    const sql = getDbClient();
     await sql`DELETE FROM dishes WHERE id = ${id}`;
     return new Response(JSON.stringify({ message: 'Dish deleted successfully' }), {
       status: 200,
       headers: { 'Content-Type': 'application/json' }
     });
   } catch (error) {
+    console.error('DELETE /api/dishes/[id] error:', error);
     return new Response(JSON.stringify({ error: error.message }), {
       status: 500,
       headers: { 'Content-Type': 'application/json' }

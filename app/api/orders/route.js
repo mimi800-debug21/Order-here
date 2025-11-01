@@ -1,8 +1,9 @@
-import { neon } from '@neondatabase/serverless';
+import { getDbClient, initializeDatabase } from '../../../utils/db';
 
 export async function GET() {
-  const sql = neon(process.env.DATABASE_URL);
   try {
+    await initializeDatabase(); // Ensure tables exist
+    const sql = getDbClient();
     // First get the orders
     const orders = await sql`
       SELECT id::text, customer_name, destination, status, created_at 
@@ -13,14 +14,14 @@ export async function GET() {
     
     // Then get the dishes for each order
     if (orders.length > 0) {
-      const orderIds = orders.map(order => `'${order.id}'`).join(',');
-      if (orderIds) { // Only run the query if there are orders
+      const orderIds = orders.map(order => order.id);
+      if (orderIds.length > 0) {
         const orderDishes = await sql`
-          SELECT od.order_id, d.id::text, d.name, od.price 
+          SELECT od.order_id::text, d.id::text, d.name, od.price 
           FROM order_dishes od
           JOIN dishes d ON od.dish_id = d.id
-          WHERE od.order_id = ANY(ARRAY[${sql.placeholder('orderIds')}])
-        `.values({ orderIds: orderIds.split(',') });
+          WHERE od.order_id = ANY(${orderIds}::UUID[])
+        `;
         
         // Group dishes by order
         const dishesByOrder = {};
@@ -47,6 +48,7 @@ export async function GET() {
       headers: { 'Content-Type': 'application/json' }
     });
   } catch (error) {
+    console.error('GET /api/orders error:', error);
     return new Response(JSON.stringify({ error: error.message }), {
       status: 500,
       headers: { 'Content-Type': 'application/json' }
@@ -55,9 +57,10 @@ export async function GET() {
 }
 
 export async function POST(request) {
-  const { customerName, destination, dishes } = await request.json();
-  const sql = neon(process.env.DATABASE_URL);
   try {
+    await initializeDatabase(); // Ensure tables exist
+    const { customerName, destination, dishes } = await request.json();
+    const sql = getDbClient();
     // Insert the order
     const [newOrder] = await sql`
       INSERT INTO orders (customer_name, destination, status) 
@@ -84,6 +87,7 @@ export async function POST(request) {
       headers: { 'Content-Type': 'application/json' }
     });
   } catch (error) {
+    console.error('POST /api/orders error:', error);
     return new Response(JSON.stringify({ error: error.message }), {
       status: 500,
       headers: { 'Content-Type': 'application/json' }
