@@ -1,6 +1,5 @@
 import './globals.css'
-import { NeonOrderProvider } from '../context/NeonOrderContext'
-import InitDB from './init-db'
+import { ApiOrderProvider } from '../context/ApiOrderContext'
 
 export const metadata = {
   title: 'Gerichte – Client & Admin',
@@ -11,10 +10,9 @@ export default function RootLayout({ children }) {
   return (
     <html lang="de">
       <body>
-        <InitDB />
-        <NeonOrderProvider>
+        <ApiOrderProvider>
           {children}
-        </NeonOrderProvider>
+        </ApiOrderProvider>
       </body>
     </html>
   )
