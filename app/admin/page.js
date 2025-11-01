@@ -247,7 +247,7 @@ export default function AdminPage() {
                 <div className="empty">Noch keine Bestellungen in den letzten 48 Stunden.</div>
               ) : (
                 recentOrders.map(order => {
-                  const created = new Date(order.createdAt);
+                  const created = new Date(order.created_at);
                   const meta = `${created.toLocaleDateString()} ${created.toLocaleTimeString()}`;
                   const statusLabel = order.status === "done" ? "erledigt" : 
                                      (order.status === "in_progress" ? "in Arbeit" : "offen");
@@ -309,7 +309,6 @@ export default function AdminPage() {
             <div className="hint">
               Admin aktualisiert Bestellungen automatisch (Polling). Bestellungen werden in der Neon-Datenbank gespeichert.
             </div>
-          </div>
           </div>
         </div>
       </section>
