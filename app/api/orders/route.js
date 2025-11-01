@@ -1,7 +1,13 @@
-import { getDbClient, initializeDatabase } from '../../../utils/db';
-
 export async function GET() {
+  if (!process.env.DATABASE_URL) {
+    return new Response(
+      JSON.stringify({ error: 'DATABASE_URL not configured' }),
+      { status: 500, headers: { 'Content-Type': 'application/json' } }
+    );
+  }
+
   try {
+    const { initializeDatabase, getDbClient } = await import('../../../utils/db');
     await initializeDatabase(); // Ensure tables exist
     const sql = getDbClient();
     // First get the orders
@@ -57,7 +63,15 @@ export async function GET() {
 }
 
 export async function POST(request) {
+  if (!process.env.DATABASE_URL) {
+    return new Response(
+      JSON.stringify({ error: 'DATABASE_URL not configured' }),
+      { status: 500, headers: { 'Content-Type': 'application/json' } }
+    );
+  }
+
   try {
+    const { initializeDatabase, getDbClient } = await import('../../../utils/db');
     await initializeDatabase(); // Ensure tables exist
     const { customerName, destination, dishes } = await request.json();
     const sql = getDbClient();

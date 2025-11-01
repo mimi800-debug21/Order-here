@@ -31,19 +31,8 @@ export function ApiOrderProvider({ children }) {
 
   // Load initial data
   useEffect(() => {
-    // Initialize database first
-    const initializeAndLoad = async () => {
-      try {
-        await fetch('/api/db/init', { method: 'POST' });
-      } catch (error) {
-        console.error('Database initialization error:', error);
-      } finally {
-        // Load data after initialization
-        loadAllData();
-      }
-    };
-    
-    initializeAndLoad();
+    // Load data
+    loadAllData();
     
     // Set up polling for orders (every 10 seconds)
     const timer = setInterval(async () => {

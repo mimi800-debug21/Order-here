@@ -1,8 +1,14 @@
-import { getDbClient, initializeDatabase } from '../../../../utils/db';
-
 // Update dish
 export async function PUT(request, { params }) {
+  if (!process.env.DATABASE_URL) {
+    return new Response(
+      JSON.stringify({ error: 'DATABASE_URL not configured' }),
+      { status: 500, headers: { 'Content-Type': 'application/json' } }
+    );
+  }
+
   try {
+    const { initializeDatabase, getDbClient } = await import('../../../../utils/db');
     await initializeDatabase(); // Ensure tables exist
     const { id } = params;
     const { name, price, desc, tags } = await request.json();
@@ -28,7 +34,15 @@ export async function PUT(request, { params }) {
 
 // Delete dish
 export async function DELETE(request, { params }) {
+  if (!process.env.DATABASE_URL) {
+    return new Response(
+      JSON.stringify({ error: 'DATABASE_URL not configured' }),
+      { status: 500, headers: { 'Content-Type': 'application/json' } }
+    );
+  }
+
   try {
+    const { initializeDatabase, getDbClient } = await import('../../../../utils/db');
     await initializeDatabase(); // Ensure tables exist
     const { id } = params;
     const sql = getDbClient();

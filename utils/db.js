@@ -1,24 +1,21 @@
 import { neon } from '@neondatabase/serverless';
 
-// Create a single instance of the database client
-let dbClient = null;
-
 export function getDbClient() {
   if (!process.env.DATABASE_URL) {
     throw new Error('DATABASE_URL is not set');
   }
-  
-  if (!dbClient) {
-    dbClient = neon(process.env.DATABASE_URL);
-  }
-  
-  return dbClient;
+  return neon(process.env.DATABASE_URL);
 }
 
 export async function initializeDatabase() {
-  const sql = getDbClient();
+  if (!process.env.DATABASE_URL) {
+    console.log('DATABASE_URL not set, skipping database initialization');
+    return;
+  }
   
   try {
+    const sql = getDbClient();
+    
     // Create dishes table
     await sql`
       CREATE TABLE IF NOT EXISTS dishes (
@@ -55,6 +52,7 @@ export async function initializeDatabase() {
     console.log('Database tables created successfully');
   } catch (error) {
     console.error('Database initialization error:', error);
-    throw error;
+    // Don't throw the error during build, just log it
+    // The tables will be created when the API is first called at runtime
   }
 }

@@ -1,7 +1,19 @@
-import { getDbClient } from '../../../../utils/db';
-
 export async function POST() {
+  if (!process.env.DATABASE_URL) {
+    return new Response(
+      JSON.stringify({ 
+        success: false, 
+        error: 'DATABASE_URL not configured' 
+      }),
+      { 
+        status: 500,
+        headers: { 'Content-Type': 'application/json' }
+      }
+    );
+  }
+
   try {
+    const { getDbClient } = await import('../../../../utils/db');
     const sql = getDbClient();
     
     // Create dishes table

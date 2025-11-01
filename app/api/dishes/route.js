@@ -1,7 +1,14 @@
-import { getDbClient, initializeDatabase } from '../../../utils/db';
-
+// Import dynamically to avoid build issues
 export async function GET() {
+  if (!process.env.DATABASE_URL) {
+    return new Response(
+      JSON.stringify({ error: 'DATABASE_URL not configured' }),
+      { status: 500, headers: { 'Content-Type': 'application/json' } }
+    );
+  }
+
   try {
+    const { initializeDatabase, getDbClient } = await import('../../../utils/db');
     await initializeDatabase(); // Ensure tables exist
     const sql = getDbClient();
     const dishes = await sql`
@@ -23,7 +30,15 @@ export async function GET() {
 }
 
 export async function POST(request) {
+  if (!process.env.DATABASE_URL) {
+    return new Response(
+      JSON.stringify({ error: 'DATABASE_URL not configured' }),
+      { status: 500, headers: { 'Content-Type': 'application/json' } }
+    );
+  }
+
   try {
+    const { initializeDatabase, getDbClient } = await import('../../../utils/db');
     await initializeDatabase(); // Ensure tables exist
     const { name, price, desc, tags } = await request.json();
     const sql = getDbClient();
