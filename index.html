@@ -115,13 +115,10 @@
           <div id="client-dish-picker"></div>
         </div>
         <div class="panel">
-          <h2>2) Wohin & Name</h2>
+          <h2>2) Name</h2>
           <form id="order-form">
             <label for="customer-name">Name</label>
             <input id="customer-name" name="customer-name" placeholder="Max Mustermann" required />
-
-            <label for="destination">Wohin</label>
-            <input id="destination" name="destination" placeholder="z. B. Musterstraße 12, 12345 Musterstadt" required />
             <div class="actions" style="margin-top:10px">
               <button class="primary" type="submit">Bestellen</button>
               <button type="reset" id="order-reset-btn">Zurücksetzen</button>
@@ -193,7 +190,7 @@
     const JSONBIN_KEY = "$2a$10$N/2gxnECUzbO8QCffVQ7Ye6N5Oare5DGjQCPaTkkcovABoafVICSS";
     const JSONBIN_DISHES_ID = "68a5d4feae596e708fcf10d3";
     const JSONBIN_ORDERS_ID = "68a5e44a43b1c97be9236b9e";
-    const ADMIN_PASSWORD = "admin123";
+
     const POLL_INTERVAL_MS = 5000;
     // ------------------------------------------------
 
@@ -386,12 +383,57 @@
           el("div",{class:"item-header"}, el("strong",{}, d.name), el("div",{}, d.price?el("span",{class:"badge"}, `${d.price.toFixed(2)} €`):"")),
           d.desc?el("div",{class:"muted"}, d.desc):"",
           d.tags?el("div",{class:"muted"}, `Tags: ${d.tags}`):"",
-          el("div",{class:"actions"}, el("button",{class:"danger", onclick: async ()=>{ await deleteDish(d.id); }}, "Löschen"))
+          el("div",{class:"actions"}, 
+            el("button",{class:"primary", onclick: async ()=>{ editDish(d.id); }}, "Bearbeiten"),
+            el("button",{class:"danger", onclick: async ()=>{ await deleteDish(d.id); }}, "Löschen")
+          )
         );
         mount.append(item);
       }
     }
     async function deleteDish(id){ const remaining = getDishesLocal().filter(d=>d.id!==id); await updateDishes(remaining,true); renderDishList(); renderClient(); }
+    
+    async function editDish(id){
+      const dishes = getDishesLocal();
+      const dish = dishes.find(d => d.id === id);
+      if(!dish) return;
+      
+      // Fill the form with the dish data
+      $("#dish-name").value = dish.name;
+      $("#dish-price").value = dish.price || "";
+      $("#dish-desc").value = dish.desc || "";
+      $("#dish-tags").value = dish.tags || "";
+      
+      // Scroll to the form
+      $("#dish-form").scrollIntoView({ behavior: "smooth" });
+      
+      // Change form submit behavior temporarily
+      const form = $("#dish-form");
+      const originalSubmit = form.onsubmit;
+      
+      // Temporarily change submit to update existing dish
+      form.onsubmit = async function(e) {
+        e.preventDefault();
+        const name = $("#dish-name").value.trim();
+        const price = parseFloat($("#dish-price").value);
+        const desc = $("#dish-desc").value.trim();
+        const tags = $("#dish-tags").value.trim();
+        if(!name){ alert("Gerichtsname erforderlich."); return; }
+        
+        const arr = getDishesLocal();
+        const existingIndex = arr.findIndex(x => x.id === id);
+        if(existingIndex >= 0){
+          arr[existingIndex] = { id: dish.id, name, price: isFinite(price)?price:0, desc, tags };
+        }
+        await updateDishes(arr, true);
+        form.reset();
+        renderDishList();
+        renderClient();
+        
+        // Restore original submit behavior
+        form.onsubmit = originalSubmit;
+      };
+    }
 
     // export/import dishes (unchanged)
     $("#export-dishes-btn").addEventListener("click", ()=>{ const data = getDishesLocal(); const blob = new Blob([JSON.stringify(data,null,2)],{type:"application/json"}); const url = URL.createObjectURL(blob); const a=document.createElement("a"); a.href=url; a.download="gerichte_export_"+new Date().toISOString().slice(0,19).replace(/[:T]/g,'-')+".json"; document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(url); });
@@ -429,14 +471,30 @@
       if(!checked.length){ alert("Bitte mindestens ein Gericht auswählen."); return; }
       const customerName = $("#customer-name").value.trim();
       if(!customerName){ alert("Bitte deinen Namen angeben."); return; }
-      const destination = $("#destination").value.trim();
-      if(!destination){ alert("Bitte Feld 'Wohin' ausfüllen."); return; }
       const arr = getOrdersLocal();
-      const order = { id: uid(), dishes: checked.map(d=>({id:d.id,name:d.name,price:d.price||0})), destination, customerName, status: "open", createdAt: new Date().toISOString() };
+      const order = { id: uid(), dishes: checked.map(d=>({id:d.id,name:d.name,price:d.price||0})), destination: "N/A", customerName, status: "open", createdAt: new Date().toISOString() };
       arr.unshift(order);
       await updateOrders(arr, true); // save local + remote
       e.target.reset();
       Array.from(document.querySelectorAll("#client-dish-picker input[type=checkbox]")).forEach(cb=>cb.checked=false);
+      
+      // Request notification permission if not already granted and show notification
+      if (Notification.permission === 'granted') {
+        new Notification('Neue Bestellung eingegangen!', {
+          body: `Von: ${customerName}\nGerichte: ${checked.map(d => d.name).join(', ')}`,
+          icon: 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><text y=".9em" font-size="90">🍕</text></svg>'
+        });
+      } else if (Notification.permission !== 'denied') {
+        Notification.requestPermission().then(function(permission) {
+          if (permission === 'granted') {
+            new Notification('Neue Bestellung eingegangen!', {
+              body: `Von: ${customerName}\nGerichte: ${checked.map(d => d.name).join(', ')}`,
+              icon: 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><text y=".9em" font-size="90">🍕</text></svg>'
+            });
+          }
+        });
+      }
+      
       alert("Bestellung wurde übermittelt.");
     });
 
@@ -457,7 +515,7 @@
             el("div",{}, el("span",{class:badge}, statusLabel))
           ),
           el("div",{class:"muted"}, `Bestellt am ${meta}`),
-          el("div",{}, `Wohin: ${o.destination}`),
+          o.destination && o.destination !== "N/A" ? el("div",{}, `Wohin: ${o.destination}`) : "",
           (function(){ const ul = el("ul",{class:"inline-list"}); for(const d of o.dishes) ul.append(el("li",{}, `${d.name}${(typeof d.price==='number' && d.price>0)?` (${d.price.toFixed(2)} €)`:""}`)); return ul; })(),
           el("div",{class:"actions"},
             el("button",{class:"ok", onclick: async ()=>{ await setOrderStatus(o.id,"in_progress"); }}, "In Arbeit"),
@@ -496,8 +554,33 @@
         const normalized = normalizeOrders(raw);
         // if normalized array is non-empty, adopt it as authoritative
         if(Array.isArray(normalized)){
+          const oldOrders = getOrdersLocal();
+          const oldOrderIds = new Set(oldOrders.map(o => o.id));
+          const newOrders = normalized.filter(order => !oldOrderIds.has(order.id));
+          
           setOrdersLocal(normalized);
           renderOrders();
+          
+          // Show notifications for new orders
+          if(newOrders.length > 0 && Notification.permission === 'granted'){
+            for(const order of newOrders){
+              new Notification('Neue Bestellung eingegangen!', {
+                body: `Von: ${order.customerName}\nGerichte: ${order.dishes.map(d => d.name).join(', ')}`,
+                icon: 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><text y=".9em" font-size="90">🍕</text></svg>'
+              });
+            }
+          } else if(newOrders.length > 0 && Notification.permission !== 'denied'){
+            Notification.requestPermission().then(function(permission) {
+              if (permission === 'granted') {
+                for(const order of newOrders){
+                  new Notification('Neue Bestellung eingegangen!', {
+                    body: `Von: ${order.customerName}\nGerichte: ${order.dishes.map(d => d.name).join(', ')}`,
+                    icon: 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><text y=".9em" font-size="90">🍕</text></svg>'
+                  });
+                }
+              }
+            });
+          }
         }
       }catch(e){ console.warn("refreshOrdersFromRemote:", e); }
     }
@@ -521,7 +604,35 @@
         try{
           const rawO = await fetchBinLatest(JSONBIN_ORDERS_ID);
           const normalized = normalizeOrders(rawO);
-          if(Array.isArray(normalized) && normalized.length) setOrdersLocal(normalized);
+          if(Array.isArray(normalized) && normalized.length){
+            // Check for new orders compared to local storage
+            const oldOrders = getOrdersLocal();
+            const oldOrderIds = new Set(oldOrders.map(o => o.id));
+            const newOrders = normalized.filter(order => !oldOrderIds.has(order.id));
+            
+            setOrdersLocal(normalized);
+            
+            // Show notifications for new orders
+            if(newOrders.length > 0 && Notification.permission === 'granted'){
+              for(const order of newOrders){
+                new Notification('Neue Bestellung eingegangen!', {
+                  body: `Von: ${order.customerName}\nGerichte: ${order.dishes.map(d => d.name).join(', ')}`,
+                  icon: 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><text y=".9em" font-size="90">🍕</text></svg>'
+                });
+              }
+            } else if(newOrders.length > 0 && Notification.permission !== 'denied'){
+              Notification.requestPermission().then(function(permission) {
+                if (permission === 'granted') {
+                  for(const order of newOrders){
+                    new Notification('Neue Bestellung eingegangen!', {
+                      body: `Von: ${order.customerName}\nGerichte: ${order.dishes.map(d => d.name).join(', ')}`,
+                      icon: 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><text y=".9em" font-size="90">🍕</text></svg>'
+                    });
+                  }
+                }
+              });
+            }
+          }
           else {
             const local = getOrdersLocal();
             if(local.length) await putBin(JSONBIN_ORDERS_ID, local);
@@ -549,9 +660,7 @@
     function onHashChange(){
       const path = location.hash.replace("#","") || "/client";
       if(path === "/admin" || path === "admin") {
-        // require pw
-        const pw = prompt("Admin-Passwort eingeben:");
-        if(pw === ADMIN_PASSWORD) showAdmin(); else { alert("Zugriff verweigert."); location.replace("#/client"); }
+        showAdmin();
       } else showClient();
     }
     function showClient(){ $("#view-client").hidden = false; $("#view-admin").hidden = true; $("#link-client").classList.add("active"); }
