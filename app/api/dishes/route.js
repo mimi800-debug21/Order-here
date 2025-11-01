@@ -1,4 +1,4 @@
-// Import dynamically to avoid build issues
+// Updated API route with timestamp to force cache refresh - 2025-11-01
 export async function GET() {
   if (!process.env.DATABASE_URL) {
     return new Response(
