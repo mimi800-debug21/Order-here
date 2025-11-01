@@ -1,0 +1,271 @@
+:root {
+  --bg: #0f172a;
+  --panel: #111827;
+  --panel-2: #1f2937;
+  --accent: #22d3ee;
+  --text: #e5e7eb;
+  --muted: #9ca3af;
+  --ok: #22c55e;
+  --warn: #f59e0b;
+  --danger: #ef4444;
+}
+
+* {
+  box-sizing: border-box;
+  padding: 0;
+  margin: 0;
+}
+
+html,
+body {
+  height: 100%;
+  background: radial-gradient(1200px 800px at 10% 10%, #0b1226 0, var(--bg) 60%);
+  color: var(--text);
+  font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+}
+
+body {
+  margin: 0;
+  padding: 24px;
+}
+
+.wrap {
+  max-width: 1000px;
+  margin: 0 auto;
+  padding: 0 24px;
+}
+
+header {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 16px;
+}
+
+.brand {
+  font-weight: 700;
+  letter-spacing: .2px;
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+
+.brand-badge {
+  width: 28px;
+  height: 28px;
+  border-radius: 8px;
+  background: linear-gradient(135deg, #22d3ee, #22c55e);
+  box-shadow: 0 0 20px rgba(34, 211, 238, .35);
+}
+
+nav {
+  display: flex;
+  gap: 8px;
+}
+
+a.btn {
+  text-decoration: none;
+  color: var(--text);
+  padding: 10px 14px;
+  border-radius: 12px;
+  background: #0b1220;
+  border: 1px solid #1f2a44;
+}
+
+a.btn.active, a.btn:hover {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 2px rgba(34,211,238,.15) inset;
+}
+
+.panel {
+  background: linear-gradient(180deg, var(--panel) 0, var(--panel-2) 100%);
+  border: 1px solid #243048;
+  border-radius: 16px;
+  padding: 18px;
+  margin: 12px 0;
+  box-shadow: 0 10px 30px rgba(2,6,23,.35);
+}
+
+h1,h2,h3 {
+  margin: 6px 0 10px;
+}
+
+h1 {
+  font-size: 26px;
+}
+
+h2 {
+  font-size: 20px;
+  color: var(--accent);
+}
+
+.grid {
+  display: grid;
+  gap: 14px;
+}
+
+.grid-2 {
+  grid-template-columns: 1fr 1fr;
+}
+
+@media (max-width: 900px) {
+  .grid-2 {
+    grid-template-columns: 1fr;
+  }
+}
+
+label {
+  font-size: 14px;
+  color: var(--muted);
+  display: block;
+  margin-bottom: 6px;
+}
+
+input, textarea, select {
+  width: 100%;
+  padding: 10px 12px;
+  border-radius: 12px;
+  border: 1px solid #2a385a;
+  background: #0b1220;
+  color: var(--text);
+  outline: none;
+}
+
+textarea {
+  min-height: 72px;
+  resize: vertical;
+}
+
+.row {
+  display: flex;
+  gap: 10px;
+}
+
+.row > * {
+  flex: 1;
+}
+
+.actions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+button {
+  padding: 10px 14px;
+  border-radius: 12px;
+  border: 1px solid #2a385a;
+  background: #0b1220;
+  color: var(--text);
+  cursor: pointer;
+}
+
+button.primary {
+  border-color: var(--accent);
+}
+
+button.ok {
+  border-color: var(--ok);
+}
+
+button.warn {
+  border-color: var(--warn);
+}
+
+button.danger {
+  border-color: var(--danger);
+}
+
+.muted {
+  color: var(--muted);
+  font-size: 14px;
+}
+
+.list {
+  display: grid;
+  gap: 10px;
+}
+
+.item {
+  display: grid;
+  gap: 6px;
+  padding: 12px;
+  border: 1px solid #25314c;
+  border-radius: 14px;
+  background: #0b1220;
+}
+
+.item-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+}
+
+.badge {
+  padding: 4px 8px;
+  border-radius: 999px;
+  border: 1px solid #2a385a;
+  font-size: 12px;
+}
+
+.badge.ok {
+  border-color: var(--ok);
+  background: rgba(34,197,94,0.06);
+}
+
+.badge.warn {
+  border-color: var(--warn);
+  background: rgba(245,158,11,0.06);
+}
+
+.badge.danger {
+  border-color: var(--danger);
+  background: rgba(239,68,68,0.06);
+}
+
+.empty {
+  padding: 16px;
+  border: 1px dashed #2a385a;
+  border-radius: 12px;
+  color: var(--muted);
+  text-align: center;
+}
+
+.footer {
+  margin-top: 24px;
+  color: var(--muted);
+  font-size: 12px;
+  text-align: center;
+}
+
+.hint {
+  font-size: 12px;
+  color: var(--muted);
+  margin-top: 6px;
+}
+
+.dish-checkbox-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px;
+  border-radius: 10px;
+  background: transparent;
+  border: 1px solid transparent;
+}
+
+.dish-checkbox-row input[type="checkbox"] {
+  width: 18px;
+  height: 18px;
+}
+
+.dish-checkbox-row label {
+  cursor: pointer;
+}
+
+ul.inline-list {
+  margin: 0;
+  padding-left: 18px;
+}
